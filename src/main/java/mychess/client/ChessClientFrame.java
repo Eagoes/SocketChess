@@ -13,14 +13,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import mychess.util.ReadProperties;
-import mychess.entity.Code;
-import mychess.entity.DataMessage;
-import mychess.entity.Message;
-import mychess.entity.NormalMessage;
-import mychess.util.Common;
-import mychess.util.HasFinished;
-import mychess.util.Internet;
-import mychess.util.JudgeMove;
 
 
 //该类实现象棋的图形界面,并负责通信
@@ -33,11 +25,8 @@ public class ChessClientFrame extends JFrame{
 	private JButton peace=new JButton("求和");
 	private Image[] pics =new Image[15];//加载象棋图片
 	private ChessBoard panel;
-	private Internet internet;
-	private String userName;
 	
 	public ChessClientFrame() {
-		internet = new Internet();
 
 		pics[1]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess11.png");
 		pics[2]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess10.png");
@@ -53,7 +42,7 @@ public class ChessClientFrame extends JFrame{
 		pics[12]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess0.png");
 		pics[13]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess5.png");
 		pics[14]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess6.png");
-		panel=new ChessBoard(pics, internet);
+		panel=new ChessBoard(pics);
 		add(panel,BorderLayout.CENTER);
 		JPanel panel2=new JPanel();
 		panel2.add(restart);

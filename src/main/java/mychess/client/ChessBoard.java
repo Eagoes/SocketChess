@@ -32,18 +32,20 @@ public class ChessBoard extends JPanel implements MouseListener,Runnable{
 		// TODO Auto-generated constructor stub
 	}
 	
-	public ChessBoard(Image[] pictures, Internet internet) {
+	public ChessBoard(Image[] pictures) {
 		// TODO Auto-generated constructor stub
 		pics=pictures;
-		this.internet=internet;
-		message= (DataMessage) internet.readMessage();
-		data=Common.String_to_Array(message.getData());
+		init();
 		addMouseListener(this);//监听鼠标操作
 		Thread t=new Thread(this);//数据服务交互
 		t.start();
 	}
 
-	public void init() {}
+	public void init() {
+		internet = new Internet();
+		message= (DataMessage) internet.readMessage();
+		data=Common.String_to_Array(message.getData());
+	}
 	
 	//绘图
 	@Override
