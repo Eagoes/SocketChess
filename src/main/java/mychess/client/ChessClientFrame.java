@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 
+import javax.naming.InterruptedNamingException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -27,17 +28,18 @@ import mychess.util.JudgeMove;
 public class ChessClientFrame extends JFrame{
 
 	private static final long serialVersionUID = 1L;
-	private JButton restart=new JButton("重开");
-	private JButton redo=new JButton("悔棋");
-	private JButton lose=new JButton("认输");
-	private JButton peace=new JButton("求和");
+	private JButton rank=new JButton("排名");
+	private JButton history=new JButton("成绩");
 	private Image[] pics =new Image[15];//加载象棋图片
 	private ChessBoard panel;
-	private Internet internet;
+	private Internet chessInternet;
+	private Internet funcInternet;
 	private String userName;
 	
-	public ChessClientFrame() {
-		internet = new Internet();
+	public ChessClientFrame(Internet outer_internet, Internet func_internet, String name) {
+		chessInternet = outer_internet;
+		funcInternet = func_internet;
+		userName = name;
 
 		pics[1]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess11.png");
 		pics[2]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess10.png");
@@ -53,50 +55,36 @@ public class ChessClientFrame extends JFrame{
 		pics[12]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess0.png");
 		pics[13]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess5.png");
 		pics[14]=Toolkit.getDefaultToolkit().getImage("src/main/resources/images/chess6.png");
-		panel=new ChessBoard(pics, internet);
+		panel=new ChessBoard(pics, chessInternet, funcInternet, userName);
 		add(panel,BorderLayout.CENTER);
 		JPanel panel2=new JPanel();
-		panel2.add(restart);
-		panel2.add(redo);
-		panel2.add(lose);
-		panel2.add(peace);
+		panel2.add(rank);
+		panel2.add(history);
 		add(panel2,BorderLayout.SOUTH);
-		restart.setBackground(new Color(216,196,152));
-		redo.setBackground(new Color(216,196,152));
-		lose.setBackground(new Color(216,196,152));
-		peace.setBackground(new Color(215,196,152));
+		rank.setBackground(new Color(216,196,152));
+		history.setBackground(new Color(216,196,152));
 		panel2.setBackground(new Color(216,196,152));
 		panel.setBackground(new Color(216,196,152));
+
+		this.setTitle("象棋");
+		this.setSize(900,700);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setLocationRelativeTo(null);
+		this.setVisible(true);
 		
-		restart.addActionListener(new ActionListener() {
+		rank.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				panel.restart();
+				panel.rank();
 			}
 		});
-		
-		redo.addActionListener(new ActionListener() {
+
+		history.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				panel.Redo();
-			}
-		});
-		
-		lose.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				panel.lose();
-			}
-		});
-		
-		peace.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				panel.peace();
+				panel.history();
 			}
 		});
 	}
@@ -109,15 +97,5 @@ public class ChessClientFrame extends JFrame{
 		}
 		super.processWindowEvent(e);
 	}
-	
-	public static void main(String[] args) {
-		ReadProperties.read();//读取配置文件
-		JFrame frame=new ChessClientFrame();
-		frame.setTitle("象棋");
-		frame.setSize(900,700);
-//		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
-	}
+
 }

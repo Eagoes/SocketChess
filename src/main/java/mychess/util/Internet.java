@@ -21,10 +21,10 @@ public class Internet{
 	 * 对数据服务器进行连接
 	 * @param
 	 */
-	public Internet() {
+	public Internet(String ip, int port) {
 		// TODO Auto-generated constructor stub
 		try {
-			socket=new Socket(ReadProperties.IP, Integer.parseInt(ReadProperties.PORT));
+			socket=new Socket(ip, port);
 			outputStreamToServer=new ObjectOutputStream(socket.getOutputStream());
 			inputStreamFromServer=new ObjectInputStream(socket.getInputStream());//阻塞直到对面的outputstream开启
 		} catch (IOException e) {
@@ -67,6 +67,7 @@ public class Internet{
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//这里处理异常，当服务器的流关闭的时候触发该异常
+			e.printStackTrace();
 			try {
 				socket.close();
 				inputStreamFromServer.close();

@@ -14,6 +14,8 @@ public class ReadProperties {
 
 	public static String DBPORT;
 
+	public static String DBUSER;
+
 	public static String DBPASSWORD;
 
 	public static String FUNCTIONPORT;
@@ -40,6 +42,7 @@ public class ReadProperties {
 		PORT=properties.getProperty("chess.port");
 		DBIP=properties.getProperty("db.ip");
 		DBPORT=properties.getProperty("db.port");
+		DBUSER=properties.getProperty("db.user");
 		DBPASSWORD=properties.getProperty("db.password");
 		FUNCTIONPORT=properties.getProperty("server.port");
 	}

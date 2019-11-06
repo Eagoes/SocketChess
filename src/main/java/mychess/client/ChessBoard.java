@@ -6,8 +6,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import mychess.entity.Code;
 import mychess.entity.DataMessage;
@@ -27,15 +26,22 @@ public class ChessBoard extends JPanel implements MouseListener,Runnable{
 	protected int[][] data;//当前棋局的状态数组,用于重绘
 	protected Image[] pics;//加载象棋的图片
 	private Internet internet;//数据服务器对象
+    private Internet funcInternet;
 	private String result="";
+	private String userName;
 	public ChessBoard() {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public ChessBoard(Image[] pictures, Internet internet) {
+	public ChessBoard(Image[] pictures, Internet outer_internet, Internet func_internet, String name) {
 		// TODO Auto-generated constructor stub
+		userName = name;
 		pics=pictures;
-		this.internet=internet;
+		internet=outer_internet;
+		funcInternet = func_internet;
+		NormalMessage initMessage = new NormalMessage();
+		initMessage.setAttach("Init");
+		internet.writeMessage(initMessage);
 		message= (DataMessage) internet.readMessage();
 		data=Common.String_to_Array(message.getData());
 		addMouseListener(this);//监听鼠标操作
@@ -279,6 +285,9 @@ public class ChessBoard extends JPanel implements MouseListener,Runnable{
 				myNormalMessage.setRole(message.getRole());
 				myNormalMessage.setAttach("游戏结束");
 				internet.writeMessage(myNormalMessage);
+				NormalMessage nameMessage = new NormalMessage();
+				nameMessage.setAttach(userName);
+				internet.writeMessage(nameMessage);
 				message.setCode(Code.Over);
 			}
 			
@@ -332,66 +341,13 @@ public class ChessBoard extends JPanel implements MouseListener,Runnable{
 			message.setCode(Code.Run);
 			if(myMessage instanceof NormalMessage){
 				//如果是消息
-				if(((NormalMessage) myMessage).getAttach().equals("悔棋")){
-					int showConfirmDialog = JOptionPane.showConfirmDialog(null, "对方请求悔棋，是否同意");
-					if(message.getRole()>2) continue;//旁观者清
-					if(showConfirmDialog==JOptionPane.YES_OPTION){
-						//发个同意的消息
-						NormalMessage temp=new NormalMessage();
-						temp.setAttach("同意悔棋");
-						internet.writeMessage(temp);
-					}else if(showConfirmDialog==JOptionPane.NO_OPTION){
-						//不同意悔棋
-						NormalMessage temp=new NormalMessage();
-						temp.setAttach("对方不同意悔棋");
-						internet.writeMessage(temp);
-					}
-				}else if(((NormalMessage) myMessage).getAttach().equals("游戏结束")){
+				if(((NormalMessage) myMessage).getAttach().equals("游戏结束")){
 					String role=myMessage.getRole()==1?"红方":"黑方";
 					result=role+"胜利";
 					message.setCode(Code.Over);
 					repaint();
-				}else if(((NormalMessage)myMessage).getAttach().equals("重新开局")){
-					int showConfirmDialog = JOptionPane.showConfirmDialog(null, "对方请求再来一局，是否同意");
-					if(message.getRole()>2) continue;//同意重新开始
-					if(showConfirmDialog==JOptionPane.YES_OPTION){
-						//发个同意的消息
-						NormalMessage temp=new NormalMessage();
-						temp.setAttach("同意开局");
-						internet.writeMessage(temp);
-					}else if(showConfirmDialog==JOptionPane.NO_OPTION){
-						//不同意悔棋
-						NormalMessage temp=new NormalMessage();
-						temp.setAttach("对方不同意开局");
-						internet.writeMessage(temp);
-					}
-				}else if(((NormalMessage)myMessage).getAttach().equals("同意开局")){
-					//将自己的最初数据包发给对方
-					init();
-					result="";
-					repaint();
-				}else if(((NormalMessage)myMessage).getAttach().contains("认输")){
-					result=message.getRole()==1?"红方获胜":"黑方获胜";
-					message.setCode(Code.Over);
-					repaint();
-				}else if(((NormalMessage)myMessage).getAttach().equals("求和")){
-					int showConfirmDialog = JOptionPane.showConfirmDialog(null, "对方请求求和，是否同意");
-					if(showConfirmDialog==JOptionPane.YES_OPTION){
-						//发个同意的消息
-						NormalMessage temp=new NormalMessage();
-						temp.setAttach("同意求和");
-						internet.writeMessage(temp);
-					}else if(showConfirmDialog==JOptionPane.NO_OPTION){
-						//不同意悔棋
-						NormalMessage temp=new NormalMessage();
-						temp.setAttach("对方不同意求和");
-						internet.writeMessage(temp);
-					}
-				}else if(((NormalMessage)myMessage).getAttach().equals("同意求和")){
-					result="双方议和";
-					message.setCode(Code.Over);
-					repaint();
-				}else if(((NormalMessage)myMessage).getAttach().equals("离开")){
+				}
+				else if(((NormalMessage)myMessage).getAttach().equals("离开")){
 					JOptionPane.showMessageDialog(null, "对方已经离开,即将退出");
 					System.exit(1);
 				}
@@ -417,69 +373,69 @@ public class ChessBoard extends JPanel implements MouseListener,Runnable{
 			message.setYourTurn(!message.isYourTurn());
 		}
 	}
-	
-	/**
-	 * 悔棋功能的实现
-	 */
-	public void Redo() {
-		//执行悔棋
-		//向服务器写悔棋请求数据
-		if(message.isYourTurn()){
-			JOptionPane.showMessageDialog(null, "到你走棋了,不能悔棋");
-			return;
-		}
-		if(message.getStep()==1){
-			JOptionPane.showMessageDialog(null, "当前是第一步，不能悔棋");
-			return;
-		}
-		NormalMessage message=new NormalMessage();
-		message.setAttach("悔棋");
-		internet.writeMessage(message);
-	}
+
 	
 	/**
 	 * 重新开始的实现
 	 */
-	public void restart() {
-		if(message.getCode().getDes().equals("结束")){
-			//游戏已经结束，可以重新开始
-			NormalMessage message=new NormalMessage();
-			message.setAttach("重新开局");
-			message.setRole(message.getRole());
-			internet.writeMessage(message);
-		}else{
-			JOptionPane.showMessageDialog(null, "游戏没有结束,请继续走棋");
-			return;
+	public void rank() {
+		JFrame rankFrame = new JFrame();
+		JPanel rankPanel = new JPanel();
+		JTextArea rankArea = new JTextArea();
+		rankArea.setText("username:\twins:\n");
+
+		NormalMessage rankMessage = new NormalMessage();
+		rankMessage.setAttach("Rank");
+		funcInternet.writeMessage(rankMessage);
+
+		NormalMessage rowMessage = (NormalMessage) funcInternet.readMessage();
+		System.out.println(rowMessage.getAttach());
+		int row = Integer.parseInt(rowMessage.getAttach());
+		for (int i = 0; i < row; i+=1) {
+			NormalMessage lineMessage = (NormalMessage) funcInternet.readMessage();
+			rankArea.append(lineMessage.getAttach());
 		}
+
+		rankPanel.add(rankArea);
+		rankFrame.add(rankPanel);
+		rankFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		rankFrame.setLocation(300,400);
+		rankFrame.setSize(450, 400);
+		rankFrame.setVisible(true);
 	}
 	
-	public void lose() {
-		if(message.getStep()<20){
-			JOptionPane.showMessageDialog(null, "二十步之内不能认输");
-			return;
-		}
-		result=message.getRole()==1?"黑方胜利":"红方胜利";
-		NormalMessage myMessage=new NormalMessage();
-		myMessage.setAttach((message.getRole()==1?"红方":"黑方")+"认输");
-		internet.writeMessage(myMessage);
-		message.setCode(Code.Over);
-		repaint();
-	}
-	
-	public void peace() {
-		if(message.getStep()<50){
-			JOptionPane.showMessageDialog(null, "五十步之内不能求和");
-			return;
-		}
-		NormalMessage message=new NormalMessage();
-		message.setAttach("求和");
-		internet.writeMessage(message);
+	public void history() {
+		JFrame historyFrame = new JFrame();
+		JPanel historyPanel = new JPanel();
+		JTextArea historyArea = new JTextArea();
+		historyArea.setText("username:\twins:\n");
+
+		NormalMessage historyMessage = new NormalMessage();
+		historyMessage.setAttach("History");
+		funcInternet.writeMessage(historyMessage);
+
+		NormalMessage nameMessage = new NormalMessage();
+		nameMessage.setAttach(userName);
+		funcInternet.writeMessage(nameMessage);
+
+		NormalMessage resultMessage = (NormalMessage) funcInternet.readMessage();
+		String result = resultMessage.getAttach();
+		System.out.println(result);
+		historyArea.append(userName + "\t" + result + "\n");
+
+		historyPanel.add(historyArea);
+		historyFrame.add(historyPanel);
+		historyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		historyFrame.setLocation(300,400);
+		historyFrame.setSize(450, 400);
+		historyFrame.setVisible(true);
 	}
 	
 	public void leave() {
 		NormalMessage message=new NormalMessage();
 		message.setAttach("离开");
 		internet.writeMessage(message);
+		funcInternet.writeMessage(message);
 	}
 	
 	//绘图的公共操作,绘制棋盘中的米字
@@ -528,7 +484,10 @@ public class ChessBoard extends JPanel implements MouseListener,Runnable{
 		//过滤消息
 		if(((NormalMessage)message).getAttach().equals("悔棋") || 
 				((NormalMessage)message).getAttach().equals("游戏结束") || ((NormalMessage)message).getAttach().equals("同意开局")
-				|| ((NormalMessage)message).getAttach().equals("求和") || ((NormalMessage)message).getAttach().equals("同意求和"))
+				|| ((NormalMessage)message).getAttach().equals("求和") || ((NormalMessage)message).getAttach().equals("同意求和")
+				|| ((NormalMessage)message).getAttach().equals("Init") || ((NormalMessage)message).getAttach().equals("History")
+				|| ((NormalMessage)message).getAttach().equals("Rank") )
+
 			return false;
 		return true;
 	}
